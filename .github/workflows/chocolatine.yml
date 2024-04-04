@@ -14,8 +14,19 @@ on:
       - 'ga-ignore-**'
 
 jobs:
+  check_mirror:
+    name: Check Mirror
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Name
+        run: |
+          REPO_NAME=$(git config --get remote.origin.url)
+          if [ "$REPO_NAME" != ${{ env.MIRROR_URL }} ]; then
+            exit 0
+          fi
   check_coding_style:
     runs-on: ubuntu-latest
+    needs: [check_mirror]
     container: ghcr.io/epitech/coding-style-checker:latest
     steps:
       - name: Checkout
@@ -63,7 +74,7 @@ jobs:
         run: make tests_run
   push_to_mirror:
     runs-on: ubuntu-latest
-    needs: [check_coding_style, check_program_compilation, run_tests]
+    needs: [check_mirror, check_coding_style, check_program_compilation, run_tests]
     if: ${{ github.event_name }} == 'push'
     steps:
       - name: Checkout
