@@ -21,6 +21,7 @@ jobs:
       - name: Check Name
         run: |
           REPO_NAME=$(git config --get remote.origin.url)
+          echo $REPO_NAME
           if [ "$REPO_NAME" != ${{ env.MIRROR_URL }} ]; then
             exit 0
           fi
