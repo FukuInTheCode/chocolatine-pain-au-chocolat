@@ -13,6 +13,6 @@ int main(int argc, char **argv)
 {
     for (int i = 0; i < argc; i++)
         if (is_a(argv[i]))
-            printf("%s is an 'a'\n", argv[i]);
+            printf("%s is an 'a' lol\n", argv[i]);
     return 0;
 }
