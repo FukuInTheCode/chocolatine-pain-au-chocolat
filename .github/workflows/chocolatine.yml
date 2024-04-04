@@ -67,12 +67,12 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     steps:
       - name: checkout
-        if: ${{ env.MIRROR_URL == github.repository }}
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Mirrorring
-        if: ${{ env.MIRROR_URL == github.repository }}
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         uses: pixta-dev/repository-mirroring-action@v1
         with:
           target_repo_url: ${{ env.MIRROR_URL }}
