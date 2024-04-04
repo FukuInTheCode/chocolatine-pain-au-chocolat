@@ -19,10 +19,13 @@ jobs:
     container: ghcr.io/epitech/coding-style-checker:latest
     steps:
       - name: Checkout
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         uses: actions/checkout@v4
       - name: Coding Style Checker
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         run: check.sh $(pwd) $(pwd)
       - name: Parse Coding Style Output
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         run: |
           while IFS="" read -r p || [ -n "$p" ]; do
             FILE=$(echo "$p" | cut -d: -f1)
@@ -40,12 +43,16 @@ jobs:
     container: epitechcontent/epitest-docker:latest
     steps:
       - name: Checkout
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         uses: actions/checkout@v4
       - name: Make
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         run: make
       - name: Make Clean
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         run: make clean
       - name: Run executables
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         run: |
           for exec in $(echo "${{ env.EXECUTABLES }}" | sed 's/,/ /g'); do
             if [ ! -x $exec ]; then
@@ -58,8 +65,10 @@ jobs:
     container: epitechcontent/epitest-docker:latest
     steps:
       - name: Checkout
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         uses: actions/checkout@v4
       - name: Make Run_tests
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
         run: make tests_run
   push_to_mirror:
     runs-on: ubuntu-latest
