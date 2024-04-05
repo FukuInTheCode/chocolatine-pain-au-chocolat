@@ -1,0 +1,88 @@
+name: Pain au chocolat
+
+env:
+  MIRROR_URL: "git@github.com:EpitechPromo2028/B-DOP-200-LIL-2-1-chocolatine-tom.carlier.git"
+  EXECUTABLES: "executable"
+
+on:
+  push:
+    branches-ignore:
+      - 'ga-ignore-**'
+  pull_request:
+    types: [opened]
+    branches-ignore:
+      - 'ga-ignore-**'
+
+jobs:
+  check_coding_style:
+    runs-on: ubuntu-latest
+    container: ghcr.io/epitech/coding-style-checker:latest
+    steps:
+      - name: Checkout
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        uses: actions/checkout@v4
+      - name: Coding Style Checker
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        run: check.sh $(pwd) $(pwd)
+      - name: Parse Coding Style Output
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        run: |
+          while IFS="" read -r p || [ -n "$p" ]; do
+            FILE=$(echo "$p" | cut -d: -f1)
+            LINE=$(echo "$p" | cut -d: -f2)
+            SEVERITY=$(echo "$p" | cut -d: -f3 | sed 's/^ //')
+            RULE=$(echo "$p" | cut -d: -f4)
+            echo "::error file=$FILE,line=$LINE,title=$SEVERITY coding style error::$RULE"
+          done < $(pwd)/coding-style-reports.log
+          if [ -s $(pwd)/coding-style-reports.log ]; then
+            exit 1
+          fi
+  check_program_compilation:
+    runs-on: ubuntu-latest
+    needs: [check_coding_style]
+    container: epitechcontent/epitest-docker:latest
+    steps:
+      - name: Checkout
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        uses: actions/checkout@v4
+      - name: Make
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        run: make
+      - name: Make Clean
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        run: make clean
+      - name: Run executables
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        run: |
+          for exec in $(echo "${{ env.EXECUTABLES }}" | sed 's/,/ /g'); do
+            if [ ! -x $exec ]; then
+                exit 1
+            fi
+          done
+  run_tests:
+    runs-on: ubuntu-latest
+    needs: [check_program_compilation]
+    container: epitechcontent/epitest-docker:latest
+    steps:
+      - name: Checkout
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        uses: actions/checkout@v4
+      - name: Make Run_tests
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        run: make tests_run
+  push_to_mirror:
+    runs-on: ubuntu-latest
+    needs: [run_tests]
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: checkout
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Mirrorring
+        if: ${{ !contains(env.MIRROR_URL, github.repository) }}
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: ${{ env.MIRROR_URL }}
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
